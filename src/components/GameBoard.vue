@@ -69,10 +69,12 @@ export default defineComponent({
             for(let i=0;i<this.dimensions.x*this.dimensions.y;i++){
                 this.board.push({adjacentMines:0,isMine:false,visible:false,flaggedAsMine:false})
             }
-            for(let i=0;i<Math.floor(this.dimensions.x*this.dimensions.y/6.4);i++){
+            const indexNeighbours=this.getNeighbours(clickedIndex)
+            indexNeighbours.push(clickedIndex)
+            for(let i=0;i<Math.floor(this.dimensions.x*this.dimensions.y/7);i++){
                 while(true){
                     const index=Math.floor(Math.random()*this.board.length)
-                    if(!this.board[index].isMine && index!==clickedIndex){
+                    if(!this.board[index].isMine && !indexNeighbours.includes(index)){
                         this.board[index].isMine=true
                         break
                     }
@@ -143,10 +145,12 @@ export default defineComponent({
 </script>
 <template>
     <DialogBox :data="dialogData">{{ dialogMessage }}</DialogBox>
-    <div class="flex flex-col items-center justify-center">
-        <div v-for="row,outerIntex in boardRows" class="flex flex-row">
-            <div v-for="cell,innerIndex in row" class="cell" :class="(cell.visible)?'':((cell.flaggedAsMine)?'bg-red-200':'bg-gray-200')" @click.left="handleClick(outerIntex*dimensions.x+innerIndex)" @click.right.prevent="cell.flaggedAsMine=!cell.flaggedAsMine">
-                <span v-if="cell.visible && cell.adjacentMines">{{ cell.adjacentMines }}</span>
+    <div class="fixed left-[50vw] top-[50vh]">
+        <div class="relative right-[25vw] bottom-[25vh] flex flex-col items-center justify-center">
+            <div v-for="row,outerIntex in boardRows" class="flex flex-row">
+                <div v-for="cell,innerIndex in row" class="cell" :class="(cell.visible)?'':((cell.flaggedAsMine)?'bg-red-200':'bg-gray-200')" @click.left="handleClick(outerIntex*dimensions.x+innerIndex)" @click.right.prevent="cell.flaggedAsMine=!cell.flaggedAsMine">
+                    <span v-if="cell.visible && cell.adjacentMines">{{ cell.adjacentMines }}</span>
+                </div>
             </div>
         </div>
     </div>
