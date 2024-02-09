@@ -22,7 +22,8 @@ export default defineComponent({
             board:[] as Array<BoardCell>,
             generatedMines:false,
             dialogData:undefined as DialogData,
-            dialogMessage:''
+            dialogMessage:'',
+            remainingMines:0,
         }
     },
     methods:{
@@ -71,7 +72,7 @@ export default defineComponent({
             }
             const indexNeighbours=this.getNeighbours(clickedIndex)
             indexNeighbours.push(clickedIndex)
-            for(let i=0;i<Math.floor(this.dimensions.x*this.dimensions.y/7);i++){
+            for(let i=0;i<this.remainingMines;i++){
                 while(true){
                     const index=Math.floor(Math.random()*this.board.length)
                     if(!this.board[index].isMine && !indexNeighbours.includes(index)){
@@ -124,9 +125,15 @@ export default defineComponent({
         resetBoard(){
             this.generatedMines=false
             this.board=[]
+            this.remainingMines=Math.floor(this.dimensions.x*this.dimensions.y/7)
             for(let i=0;i<this.dimensions.x*this.dimensions.y;i++){
                 this.board.push({adjacentMines:0,isMine:false,visible:false,flaggedAsMine:false})
             }
+        },
+        handleRightClick(cell:BoardCell){
+            if(cell.visible) return
+            this.remainingMines+=(cell.flaggedAsMine)?1:-1
+            cell.flaggedAsMine=!cell.flaggedAsMine
         }
     },
     computed:{
@@ -136,6 +143,10 @@ export default defineComponent({
                 ret.push(this.board.slice(i*this.dimensions.x,(i+1)*this.dimensions.x))
             }
             return ret
+        },
+        cellStyle(){
+            const width=Math.floor(0.9*Math.min(window.innerHeight/this.dimensions.y,window.innerWidth/this.dimensions.x))
+            return 'width:'+width+'px; height:'+width+'px'
         }
     },
     created(){
@@ -145,10 +156,11 @@ export default defineComponent({
 </script>
 <template>
     <DialogBox :data="dialogData">{{ dialogMessage }}</DialogBox>
-    <div class="fixed left-[50vw] top-[50vh]">
-        <div class="relative right-[25vw] bottom-[25vh] flex flex-col items-center justify-center">
+    <div class="flex flex-row justify-center">
+        <div class="flex flex-col items-center">
+            <div>Minecount: {{ remainingMines }}</div>
             <div v-for="row,outerIntex in boardRows" class="flex flex-row">
-                <div v-for="cell,innerIndex in row" class="cell" :class="(cell.visible)?'':((cell.flaggedAsMine)?'bg-red-200':'bg-gray-200')" @click.left="handleClick(outerIntex*dimensions.x+innerIndex)" @click.right.prevent="cell.flaggedAsMine=!cell.flaggedAsMine">
+                <div v-for="cell,innerIndex in row" class="border border-accent text-center align-middle" :class="(cell.visible)?'':((cell.flaggedAsMine)?'bg-accent':'bg-secondary dark:bg-dsecondary')" :style="cellStyle" @click.left="handleClick(outerIntex*dimensions.x+innerIndex)" @click.right.prevent="handleRightClick(cell)">
                     <span v-if="cell.visible && cell.adjacentMines">{{ cell.adjacentMines }}</span>
                 </div>
             </div>
@@ -156,7 +168,4 @@ export default defineComponent({
     </div>
 </template>
 <style scoped>
-.cell{
-    @apply w-[40px] h-[40px] border border-black;
-}
 </style>
